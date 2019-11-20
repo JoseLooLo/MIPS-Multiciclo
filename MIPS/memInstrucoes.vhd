@@ -5,8 +5,8 @@ library ieee;
 entity memInstrucao is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 10 );
   port(
         addressIn : in std_logic_vector(31 downto 0); --address Input 
-        data1 : out std_logic_vector(DATA_WIDTH-1 downto 0); --data Output rs
-        data3 : in std_logic_vector(DATA_WIDTH-1 downto 0); --data Input 
+        data1 : out std_logic_vector(31 downto 0); --data Output rs
+        data3 : in std_logic_vector(31 downto 0); --data Input 
         MemRead : in std_logic;
         MemWrite : in std_logic
         ); 
@@ -14,16 +14,16 @@ entity memInstrucao is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer 
 
 architecture rtl of memInstrucao is
 --Internal Variables--
-  signal data_out1 : std_logic_vector(DATA_WIDTH-1 downto 0);
-  signal address1 : std_logic_vector(ADDR_WIDTH-1 downto 0);
-  constant RAM_DEPTH :integer := 2**(ADDR_WIDTH);
-    type RAM is array (integer range<>) of std_logic_vector(DATA_WIDTH-1 downto 0);
+  signal data_out1 : std_logic_vector(31 downto 0);
+  signal address1 : std_logic_vector(9 downto 0);
+  constant RAM_DEPTH :integer := 2**(10);
+    type RAM is array (integer range<>) of std_logic_vector(31 downto 0);
   signal mem : RAM (0 to RAM_DEPTH-1);
 
 
 begin
 
-address1 <= addressIn(ADDR_WIDTH-1 downto 0);
+address1 <= addressIn(9 downto 0);
 data1 <= data_out1;
 
 --Memory Write Block 

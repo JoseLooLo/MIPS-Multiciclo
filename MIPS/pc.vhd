@@ -20,7 +20,7 @@ begin
 	
     process (writeEnable, addrInput) begin
         if( writeEnable = '1' ) then 
-            addr_Output <= addrInput after 10 ns;
+            addr_Output <= addrInput;
         end if;
 	end process;
 end architecture;

@@ -3,22 +3,30 @@ library ieee;
       use ieee.std_logic_unsigned.all;
       use ieee.std_logic_arith.all;
       
-entity datapath is
+entity datapathDBG is
 	port (
 		clock, reset : in std_logic;
-		i_in : in std_logic_vector(31 downto 0);
-		i_dt1, i_dt2 : in std_logic_vector(31 downto 0);
+		i_instrucao : in std_logic_vector(31 downto 0);
+		i_endpc : in std_logic_vector(31 downto 0);
+		i_data1 : in std_logic_vector(31 downto 0);
+		i_data2 : in std_logic_vector(31 downto 0);
 		dbg_ULAFonteA, dbg_EscReg, dbg_RegDst, dbg_PCEscCond, dbg_PCEsc, dbg_IouD, dbg_LerMem, dbg_EscMem, dbg_MemParaReg, dbg_IREsc : out std_logic;
 		dbg_FontePC, dbg_ULAOp, dbg_ULAFonteB : out std_logic_vector(1 downto 0);
-		dbg_instruction : out std_logic_vector(31 downto 0);
-		dbg_dt_saida : out std_logic_vector(31 downto 0);
-		dbg_data_3_EntradaMemDados : out std_logic_vector(31 downto 0);
-		dbg_regRd_Mux : out std_logic_vector(4 downto 0);
-		dbg_entradaPC, dbg_saidaPC : out std_logic_vector(31 downto 0)
+	
+		dbg_dataEntradaMemInstrucao: out std_logic_vector(31 downto 0);
+		dbg_entradaPC: out std_logic_vector(31 downto 0);
+		dbg_Result, dbg_addressIn  : out std_logic_vector (31 downto 0);
+		dbg_opCode, dbg_funcCode : out std_logic_vector(5 downto 0);
+		dbg_regRs, dbg_regRt, dbg_regRd, dbg_regRd_Mux : out std_logic_vector(4 downto 0);
+		dbg_imm : out std_logic_vector(15 downto 0);
+		dbg_jumpAddr : out std_logic_vector(25 downto 0);
+		dbg_data_1_SaidaMemDados, dbg_data_2_SaidaMemDados, dbg_data_3_EntradaMemDados : out std_logic_vector(31 downto 0)
+	--Sinal desvio incondicional
+		--dbg_desvioJ : out std_logic_vector(31 downto 0)
 	);
-  end datapath;
+  end datapathDBG;
   
-architecture behavioral of datapath is
+architecture behavioral of datapathDBG is
 
 	component ULA_Wrapper is
 		generic (DATA : integer := 32);
@@ -56,6 +64,7 @@ architecture behavioral of datapath is
 			  MemWrite : in std_logic
 			  ); 
 	end component;
+	
 	
 	component memDados is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 5 );
 		port(
@@ -179,7 +188,7 @@ architecture behavioral of datapath is
 	--Sinal desvio incondicional
 	signal desvioJ : std_logic_vector(31 downto 0);
 	
-	signal temp, temp_dt1, temp_dt2 : std_logic_vector (31 downto 0);
+	signal temp, temppc, temp_dt1, temp_dt2 : std_logic_vector (31 downto 0);
 	
 	begin
 	
@@ -196,31 +205,45 @@ architecture behavioral of datapath is
 		dbg_FontePC <= FontePC;
 		dbg_ULAOp <= ULAOp;
 		dbg_ULAFonteB <= ULAFonteB;
-		dbg_instruction <= dataSaidaMemInstrucao;
-		dbg_dt_saida <= Result;
-		dbg_data_3_EntradaMemDados <= data_3_EntradaMemDados;
-		dbg_regRd_Mux <= regRd_Mux;
+		dbg_dataEntradaMemInstrucao <= saidaRegB;
 		dbg_entradaPC <= entradaPC;
-		dbg_saidaPC <= saidaPC;
+		dbg_Result <= Result;
+		dbg_addressIn <= addressIn;
+		dbg_opCode <= opCode;
+		dbg_funcCode <= funcCode;
+		dbg_regRs <= regRs;
+		dbg_regRt <= regRt;
+		dbg_regRd <= regRd;
+		dbg_regRd_Mux <= regRd_Mux;
+		dbg_imm <= imm;
+		dbg_jumpAddr <= jumpAddr;
+		dbg_data_1_SaidaMemDados <= data_1_SaidaMemDados;
+		dbg_data_2_SaidaMemDados <= data_2_SaidaMemDados;
+		dbg_data_3_EntradaMemDados <= data_3_EntradaMemDados;
+	--Sinal desvio incondicional
+		--dbg_desvioJ <= desvioJ;
 	
 		writeEnablePC <= (PCEscCond and Zero) or PCEsc;
 		desvioJ(27 downto 0) <= saidaDeslocador2;
 		desvioJ(31 downto 28) <= saidaPC(31 downto 28);
 		
-		dataSaidaMemInstrucao <= i_in;
-		data_1_SaidaMemDados <= i_dt1;
-		data_2_SaidaMemDados <= i_dt2;
+		saidaPC <= i_endpc;
+		dataSaidaMemInstrucao <= i_instrucao;
+		--entrada_dbg_dados <= i_md;
+		--dataSaidaMemInstrucao <= temp;
+		saidaRegA <= i_data1;
+		saidaRegB <= i_data2;
 		
 		
 		control : Controle port map (clock, reset, opCode, FontePC, ULAOp, ULAFonteB, ULAFonteA, EscReg, RegDst, PCEscCond, PCEsc, IouD, LerMem, EscMem, MemParaReg, IREsc);
 	
 		ALUUnit : ULA_Wrapper generic map (DATA => 32) port map (RegAULA, RegBULA, ULAOp, funcCode, Result, Zero);
 		RegIns : regInstrucao port map (IREsc, dataSaidaMemInstrucao, opCode, regRs, regRt, regRd, imm, jumpAddr, funcCode);
-		MemIns : memInstrucao generic map (DATA_WIDTH => 32, ADDR_WIDTH => 10 ) port map (addressIn, temp, dataEntradaMemInstrucao, LerMem, EscMem);
-		MemDad : memDados generic map (DATA_WIDTH => 32, ADDR_WIDTH => 5) port map (regRs, regRt, regRd_Mux, temp_dt1, temp_dt2, data_3_EntradaMemDados, EscReg);
+		MemIns : memInstrucao generic map (DATA_WIDTH => 32, ADDR_WIDTH => 10 ) port map (addressIn, temp , saidaRegB, LerMem, EscMem);
+		MemDad : memDados generic map (DATA_WIDTH => 32, ADDR_WIDTH => 5) port map (regRs, regRt, regRd_Mux, data_1_SaidaMemDados, data_2_SaidaMemDados, data_3_EntradaMemDados, EscReg);
 		--Regs genericos
-		RegA : bitsReg port map (data_1_SaidaMemDados, clock, saidaRegA);
-		RegB : bitsReg port map (data_2_SaidaMemDados, clock, saidaRegB);
+		RegA : bitsReg port map (data_1_SaidaMemDados, clock, temp_dt1);
+		RegB : bitsReg port map (data_2_SaidaMemDados, clock, temp_dt2);
 		RegDados : bitsReg port map(dataSaidaMemInstrucao, clock, saidaRegDadosGenerico);
 		RegULASaida : bitsReg port map (Result, clock, saidaRegULA);
 		--Mux
@@ -236,6 +259,6 @@ architecture behavioral of datapath is
 		Desloca1 : shiftLeft2 port map (saidaExtender, saidaDeslocador1);
 		Desloca2 : shiftleft22 port map (jumpAddr, saidaDeslocador2);
 		
-		PC1 : pc port map (writeEnablePC, entradaPC, saidaPC);
+		PC1 : pc port map (writeEnablePC, entradaPC, temppc);
   
 end behavioral;
