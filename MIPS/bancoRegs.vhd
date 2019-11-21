@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity memDados is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 5 );
+entity bancoRegs is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 5 );
 
     port(
         address1 : in std_logic_vector(ADDR_WIDTH-1 downto 0); --address Input read register rs
@@ -15,7 +15,7 @@ entity memDados is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 5
         ); 
 end entity;
       
-architecture rtl of memDados is 
+architecture rtl of bancoRegs is 
 
     --Internal Variables--
     constant RAM_DEPTH :integer := 2**ADDR_WIDTH;

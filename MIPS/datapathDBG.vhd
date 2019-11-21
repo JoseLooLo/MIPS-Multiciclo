@@ -55,7 +55,7 @@ architecture behavioral of datapathDBG is
           );
 	end component;
 	
-	component memInstrucao is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 10 );
+	component memoria is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 10 );
 		port(
 			  addressIn : in std_logic_vector(31 downto 0); --address Input 
 			  data1 : out std_logic_vector(DATA_WIDTH-1 downto 0); --data Output rs
@@ -66,7 +66,7 @@ architecture behavioral of datapathDBG is
 	end component;
 	
 	
-	component memDados is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 5 );
+	component bancoRegs is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 5 );
 		port(
         address1 : in std_logic_vector(ADDR_WIDTH-1 downto 0); --address Input read register rs
         address2 : in std_logic_vector(ADDR_WIDTH-1 downto 0); --address Input read register rt
@@ -125,14 +125,14 @@ architecture behavioral of datapathDBG is
 		 );
 	end component;
 	
-	component shiftLeft2 is 
+	component deslocador1 is 
 		 port(
 			 dataIn  :in  std_logic_vector(31 downto 0);
 			  dataOut :out std_logic_vector(31 downto 0)
 		 );
 	end component;
 	
-	component shiftleft22 is 
+	component deslocador2 is 
 		 port(
 				 dataIn :in std_logic_vector(25 downto 0);
 				 dataOut :out std_logic_vector(27 downto 0)
@@ -239,8 +239,8 @@ architecture behavioral of datapathDBG is
 	
 		ALUUnit : ULA_Wrapper generic map (DATA => 32) port map (RegAULA, RegBULA, ULAOp, funcCode, Result, Zero);
 		RegIns : regInstrucao port map (IREsc, dataSaidaMemInstrucao, opCode, regRs, regRt, regRd, imm, jumpAddr, funcCode);
-		MemIns : memInstrucao generic map (DATA_WIDTH => 32, ADDR_WIDTH => 10 ) port map (addressIn, temp , saidaRegB, LerMem, EscMem);
-		MemDad : memDados generic map (DATA_WIDTH => 32, ADDR_WIDTH => 5) port map (regRs, regRt, regRd_Mux, data_1_SaidaMemDados, data_2_SaidaMemDados, data_3_EntradaMemDados, EscReg);
+		MemIns : memoria generic map (DATA_WIDTH => 32, ADDR_WIDTH => 10 ) port map (addressIn, temp , saidaRegB, LerMem, EscMem);
+		Banco : bancoRegs generic map (DATA_WIDTH => 32, ADDR_WIDTH => 5) port map (regRs, regRt, regRd_Mux, data_1_SaidaMemDados, data_2_SaidaMemDados, data_3_EntradaMemDados, EscReg);
 		--Regs genericos
 		RegA : bitsReg port map (data_1_SaidaMemDados, clock, temp_dt1);
 		RegB : bitsReg port map (data_2_SaidaMemDados, clock, temp_dt2);
@@ -256,8 +256,8 @@ architecture behavioral of datapathDBG is
 		
 		--Deslocamento e extenção de sinal
 		Extender1 : Signal_extender port map (imm, saidaExtender);
-		Desloca1 : shiftLeft2 port map (saidaExtender, saidaDeslocador1);
-		Desloca2 : shiftleft22 port map (jumpAddr, saidaDeslocador2);
+		Desloca1 : deslocador1 port map (saidaExtender, saidaDeslocador1);
+		Desloca2 : deslocador2 port map (jumpAddr, saidaDeslocador2);
 		
 		PC1 : pc port map (writeEnablePC, entradaPC, temppc);
   

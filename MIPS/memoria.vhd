@@ -2,7 +2,7 @@ library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;
 
-entity memInstrucao is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 10 );
+entity memoria is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer := 10 );
   port(
         addressIn : in std_logic_vector(31 downto 0); --address Input 
         data1 : out std_logic_vector(31 downto 0); --data Output rs
@@ -12,7 +12,7 @@ entity memInstrucao is generic ( DATA_WIDTH :integer := 32; ADDR_WIDTH :integer 
         ); 
   end entity;
 
-architecture rtl of memInstrucao is
+architecture rtl of memoria is
 --Internal Variables--
   signal data_out1 : std_logic_vector(31 downto 0);
   signal address1 : std_logic_vector(9 downto 0);
